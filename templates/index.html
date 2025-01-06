@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: auto; text-align: center; }
+        input, button { padding: 10px; margin: 5px; }
+        .weather { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Dashboard</h1>
+        <form id="weatherForm">
+            <input type="text" id="cityInput" name="city" placeholder="Enter city name" required>
+            <button type="submit">Get Weather</button>
+        </form>
+        <div class="weather" id="weatherDisplay"></div>
+    </div>
+    <script>
+        const form = document.getElementById('weatherForm');
+        const weatherDisplay = document.getElementById('weatherDisplay');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const city = document.getElementById('cityInput').value;
+
+            try {
+                const response = await fetch('/weather', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `city=${encodeURIComponent(city)}`
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    weatherDisplay.innerHTML = `
+                        <h2>${data.current_weather.city}</h2>
+                        <p>Temperature: ${data.current_weather.temperature}°C</p>
+                        <p>Description: ${data.current_weather.description}</p>
+                        <p>Humidity: ${data.current_weather.humidity}%</p>
+                        <p>Wind Speed: ${data.current_weather.wind_speed} m/s</p>
+                        <h3>5-Day Forecast</h3>
+                        <ul>
+                            ${data.forecast.map(f => `
+                                <li>${new Date(f.date).toDateString()}: ${f.temp}°C, ${f.description}</li>
+                            `).join('')}
+                        </ul>
+                    `;
+                } else {
+                    weatherDisplay.innerHTML = `<p>Error: ${data.error}</p>`;
+                }
+            } catch (error) {
+                weatherDisplay.innerHTML = `<p>Failed to fetch weather data.</p>`;
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
